@@ -7,7 +7,6 @@ const Footer = () => {
     <footer id="contato" className="bg-[hsl(var(--header-footer))] text-white">
       <div className="container mx-auto px-4 py-12">
         <div className="grid md:grid-cols-3 gap-8 mb-8">
-          {/* Logo e Descrição */}
           <div>
             <div className="flex flex-col items-center md:items-start gap-2 mb-4">
               <div className="h-20 w-40 overflow-visible flex items-center justify-center md:justify-start">
@@ -24,23 +23,22 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-white/80 transition-colors"
-                aria-label="Facebook do Grupo MB Empreendimentos">
-                
+                aria-label="Facebook do Grupo MB Empreendimentos"
+              >
                 <img src={facebookIcon} alt="Facebook" className="w-8 h-8" />
               </a>
               <a
-                href="https://www.instagram.com/vivacapitalconsorcios?igsh=NWx0NHR3dHZsZG12"
+                href="https://www.instagram.com/grupombempreendimentos"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-white/80 transition-colors"
-                aria-label="Instagram do Grupo MB Empreendimentos">
-                
+                aria-label="Instagram do Grupo MB Empreendimentos"
+              >
                 <Instagram className="w-8 h-8" />
               </a>
             </div>
           </div>
 
-          {/* Contato */}
           <div>
             <h3 className="text-xl font-bold mb-4">Fale Conosco</h3>
             <div className="space-y-3">
@@ -48,13 +46,13 @@ const Footer = () => {
                 <Phone className="w-5 h-5 mt-1 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">WhatsApp</p>
-                  <p className="text-white/90">(41) 99874-6589</p>
+                  <p className="text-white/90">(93) 99190-5464</p>
+                  <p className="text-white/90">(93) 99144-2447</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Localização e Horário */}
           <div>
             <h3 className="text-xl font-bold mb-4">Localização</h3>
             <div className="space-y-3">
@@ -62,8 +60,8 @@ const Footer = () => {
                 <MapPin className="w-5 h-5 mt-1 flex-shrink-0" />
                 <div>
                   <p className="text-white/90">
-                    Curitiba - Paraná, Rua Marechal Deodoro 869, bairro Centro<br />
-                    CEP: 80010-010
+                    Tv Dom Amando, Centro, N 573<br />
+                    esquina com São Sebastião
                   </p>
                 </div>
               </div>
@@ -97,8 +95,8 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>);
-
+    </footer>
+  );
 };
 
 export default Footer;
