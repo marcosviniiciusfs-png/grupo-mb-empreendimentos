@@ -9,21 +9,58 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
-// Import client images
-import cliente1 from "@/assets/clientes/cliente-1.jpeg";
-import cliente2 from "@/assets/clientes/cliente-2.jpeg";
-import cliente3 from "@/assets/clientes/cliente-3.jpeg";
-import cliente4 from "@/assets/clientes/cliente-4.jpeg";
-import cliente5 from "@/assets/clientes/cliente-5.jpeg";
-import cliente6 from "@/assets/clientes/cliente-6.jpeg";
+type ClientMedia = {
+  src: string;
+  type: "image" | "video";
+  label: string;
+};
 
-const clientImages = [
-  cliente1,
-  cliente2,
-  cliente3,
-  cliente4,
-  cliente5,
-  cliente6,
+const clientMedia: ClientMedia[] = [
+  {
+    src: "/clientes-contemplados/cliente-contemplado-01.jpeg",
+    type: "image",
+    label: "Cliente contemplado 1",
+  },
+  {
+    src: "/clientes-contemplados/cliente-contemplado-02.jpeg",
+    type: "image",
+    label: "Cliente contemplado 2",
+  },
+  {
+    src: "/clientes-contemplados/cliente-contemplado-03.jpeg",
+    type: "image",
+    label: "Cliente contemplado 3",
+  },
+  {
+    src: "/clientes-contemplados/cliente-contemplado-04.jpeg",
+    type: "image",
+    label: "Cliente contemplado 4",
+  },
+  {
+    src: "/clientes-contemplados/cliente-contemplado-05.mp4",
+    type: "video",
+    label: "Video de cliente contemplado 5",
+  },
+  {
+    src: "/clientes-contemplados/cliente-contemplado-06.mp4",
+    type: "video",
+    label: "Video de cliente contemplado 6",
+  },
+  {
+    src: "/clientes-contemplados/cliente-contemplado-07.jpeg",
+    type: "image",
+    label: "Cliente contemplado 7",
+  },
+  {
+    src: "/clientes-contemplados/cliente-contemplado-08.mov",
+    type: "video",
+    label: "Video de cliente contemplado 8",
+  },
+  {
+    src: "/clientes-contemplados/cliente-contemplado-09.mov",
+    type: "video",
+    label: "Video de cliente contemplado 9",
+  },
 ];
 
 const TestimonialsSection = () => {
@@ -101,17 +138,31 @@ const TestimonialsSection = () => {
             className="w-full"
           >
             <CarouselContent className="-ml-2 md:-ml-4">
-              {clientImages.map((image, index) => (
+              {clientMedia.map((media, index) => (
                 <CarouselItem
                   key={index}
                   className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
                 >
-                  <div className="overflow-hidden rounded-xl shadow-lg">
-                    <img
-                      src={image}
-                      alt={`Cliente contemplado ${index + 1}`}
-                      className="w-full h-64 md:h-80 object-cover object-top transition-transform duration-300 hover:scale-105"
-                    />
+                  <div className="overflow-hidden rounded-xl shadow-lg bg-black">
+                    {media.type === "image" ? (
+                      <img
+                        src={media.src}
+                        alt={media.label}
+                        loading="lazy"
+                        className="w-full h-64 md:h-80 object-cover object-top transition-transform duration-300 hover:scale-105"
+                      />
+                    ) : (
+                      <video
+                        src={media.src}
+                        aria-label={media.label}
+                        className="w-full h-64 md:h-80 object-cover bg-black"
+                        controls
+                        playsInline
+                        preload="metadata"
+                        onPlay={() => autoplayPlugin.current.stop()}
+                        onPause={() => autoplayPlugin.current.reset()}
+                      />
+                    )}
                   </div>
                 </CarouselItem>
               ))}
