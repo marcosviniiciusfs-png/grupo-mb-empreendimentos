@@ -31,11 +31,19 @@ declare global {
 }
 
 const LEAD_WEBHOOK_URL = import.meta.env.VITE_LEAD_WEBHOOK_URL;
-const META_PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID;
+const META_PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID ?? "2864957293877250";
 const META_CAPI_ENDPOINT = import.meta.env.VITE_META_CAPI_ENDPOINT;
 
 export const createLeadEventId = () =>
   crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+const getCookie = (name: string) =>
+  document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`))
+    ?.split("=")
+    .slice(1)
+    .join("=");
 
 const buildLeadPayload = (data: LeadTrackingData, eventId: string) => ({
   event_id: eventId,
@@ -44,6 +52,8 @@ const buildLeadPayload = (data: LeadTrackingData, eventId: string) => ({
   action_source: "website",
   source_url: window.location.href,
   user_agent: navigator.userAgent,
+  fbp: getCookie("_fbp"),
+  fbc: getCookie("_fbc"),
   nome: data.fullName.trim(),
   telefone: data.whatsapp,
   tipo_bem: data.propertyType,
@@ -109,6 +119,19 @@ export const initializeMetaPixel = () => {
 export const sendConfiguredLeadWebhook = (data: LeadTrackingData, eventId: string) =>
   postJson(LEAD_WEBHOOK_URL, buildLeadPayload(data, eventId));
 
+const sendMetaCapiLead = async (
+  payload: Record<string, unknown>
+): Promise<TrackingResult> => {
+  if (!META_CAPI_ENDPOINT) {
+    return {
+      success: false,
+      error: "VITE_META_CAPI_ENDPOINT nao configurado.",
+    };
+  }
+
+  return postJson(META_CAPI_ENDPOINT, payload);
+};
+
 export const trackLeadConversion = async (
   data: LeadTrackingData,
   eventId: string
@@ -128,5 +151,5 @@ export const trackLeadConversion = async (
     );
   }
 
-  return postJson(META_CAPI_ENDPOINT, payload);
+  return sendMetaCapiLead(payload);
 };

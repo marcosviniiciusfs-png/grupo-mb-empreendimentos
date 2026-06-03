@@ -1,0 +1,7 @@
+name = "grupo-mb-meta-capi"
+main = "meta-capi-worker.js"
+compatibility_date = "2026-06-03"
+
+[vars]
+META_PIXEL_ID = "2864957293877250"
+META_GRAPH_API_VERSION = "v25.0"

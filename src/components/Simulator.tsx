@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import InputMask from "react-input-mask";
-import { sendToWebhook } from "@/services/webhook";
 import {
   createLeadEventId,
   sendConfiguredLeadWebhook,
@@ -86,6 +84,24 @@ const Simulator = () => {
     }
   };
 
+  const validateFormData = () => {
+    if (!formData.propertyType) return "Selecione o tipo de bem.";
+    if (!formData.acquisitionTime) return "Selecione o tempo de aquisicao.";
+    if (!formData.creditAmount) return "Informe o valor pretendido.";
+    if (!formData.hasDownPayment) return "Informe se possui valor de entrada.";
+    if (formData.hasDownPayment === "Sim" && !formData.downPaymentAmount) {
+      return "Informe o valor de entrada.";
+    }
+    if (!formData.monthlyPayment) return "Informe a parcela ideal.";
+    if (!formData.city.trim()) return "Informe a cidade.";
+    if (!formData.fullName.trim()) return "Informe o nome completo.";
+    if (formData.whatsapp.replace(/\D/g, "").length !== 11) {
+      return "Informe um WhatsApp valido.";
+    }
+
+    return null;
+  };
+
   const handleNext = () => {
     if (currentStep === 3 && formData.hasDownPayment === "Não") {
       setFormData({ ...formData, downPaymentAmount: "" });
@@ -122,20 +138,11 @@ const Simulator = () => {
       "Cidade": formData.city.trim()
     };
 
-    const kommoData = {
-      fullName: formData.fullName.trim(),
-      whatsapp: formData.whatsapp,
-      propertyType: formData.propertyType,
-      creditAmount: formData.creditAmount,
-      downPaymentAmount: downPaymentValue,
-      monthlyPayment: formData.monthlyPayment,
-      city: formData.city.trim(),
-    };
-
     const externalWebhookData = {
       fullName: formData.fullName.trim(),
       whatsapp: formData.whatsapp,
       creditAmount: formData.creditAmount,
+      hasDownPayment: formData.hasDownPayment,
       downPaymentAmount: downPaymentValue,
       monthlyPayment: formData.monthlyPayment,
       city: formData.city.trim(),
@@ -143,13 +150,22 @@ const Simulator = () => {
       propertyType: formData.propertyType,
     };
 
+    const validationError = validateFormData();
+    if (validationError) {
+      setIsSubmitting(false);
+      toast({
+        title: "Dados incompletos",
+        description: validationError,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      console.log("Enviando dados para webhooks e Kommo:", webhookData);
+      console.log("Enviando dados para webhooks e Meta CAPI:", webhookData);
 
       const [
         makeResult,
-        kommoResult,
-        webhookResult,
         configuredWebhookResult,
         metaConversionResult,
       ] = await Promise.allSettled([
@@ -158,46 +174,9 @@ const Simulator = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(webhookData),
         }),
-        supabase.functions.invoke('send-to-kommo', {
-          body: kommoData,
-        }),
-        sendToWebhook(externalWebhookData),
         sendConfiguredLeadWebhook(externalWebhookData, leadEventId),
         trackLeadConversion(externalWebhookData, leadEventId),
       ]);
-
-      // Process Kommo result
-      let kommoSuccess = false;
-      if (kommoResult.status === 'fulfilled') {
-        const { data: kommoResponse, error: kommoError } = kommoResult.value;
-        if (kommoError) {
-          console.error("Erro ao enviar para Kommo:", kommoError);
-        } else if (kommoResponse?.success) {
-          kommoSuccess = true;
-          console.log("Kommo OK:", kommoResponse);
-          try {
-            sessionStorage.setItem('kommo_proof', JSON.stringify({
-              leadId: kommoResponse.leadId,
-              traceId: kommoResponse.traceId,
-              leadUrl: kommoResponse.leadUrl,
-              verified: kommoResponse.verified,
-            }));
-          } catch (e) { /* ignore */ }
-        }
-      } else {
-        console.error("Erro ao enviar para Kommo:", kommoResult.reason);
-      }
-
-      // Process external webhook result
-      if (webhookResult.status === 'fulfilled') {
-        if (!webhookResult.value.success) {
-          console.error("Erro no webhook externo:", webhookResult.value.error);
-        } else {
-          console.log("Webhook externo OK");
-        }
-      } else {
-        console.error("Erro no webhook externo:", webhookResult.reason);
-      }
 
       if (
         configuredWebhookResult.status === "fulfilled" &&
@@ -219,15 +198,23 @@ const Simulator = () => {
         console.error("Erro na Conversion API:", metaConversionResult.reason);
       }
 
+      if (
+        metaConversionResult.status === "fulfilled" &&
+        !metaConversionResult.value.success
+      ) {
+        throw new Error(
+          `Erro na API de Conversoes da Meta: ${
+            metaConversionResult.value.error || "tente novamente."
+          }`
+        );
+      }
+
+      if (metaConversionResult.status === "rejected") {
+        throw new Error("Erro na API de Conversoes da Meta: tente novamente.");
+      }
+
       // Check if Make was successful
       if (makeResult.status === 'fulfilled' && makeResult.value.ok) {
-        if (!kommoSuccess) {
-          toast({
-            title: "Atenção",
-            description: "Enviado para planilha, mas houve falha ao registrar no CRM. Será reprocessado.",
-            variant: "destructive",
-          });
-        }
         setFormData({
           propertyType: "",
           acquisitionTime: "",
@@ -249,7 +236,7 @@ const Simulator = () => {
       setIsSubmitting(false);
       toast({
         title: "Erro ao enviar simulação",
-        description: "Por favor, tente novamente.",
+        description: error instanceof Error ? error.message : "Por favor, tente novamente.",
         variant: "destructive",
       });
       return;
