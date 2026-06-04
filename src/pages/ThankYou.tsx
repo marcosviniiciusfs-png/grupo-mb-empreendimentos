@@ -1,14 +1,30 @@
 import { useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 
 const ThankYou = () => {
+  const canShowThankYou =
+    typeof window !== "undefined" &&
+    sessionStorage.getItem("lead_submission_success") === "true";
+
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).fbq) {
-      (window as any).fbq("track", "PageView");
+    if (!canShowThankYou) return;
+
+    try {
+      sessionStorage.removeItem("lead_submission_success");
+    } catch {
+      // Ignore storage errors.
     }
-  }, []);
+
+    if (typeof window !== "undefined" && window.fbq) {
+      window.fbq("track", "PageView");
+    }
+  }, [canShowThankYou]);
+
+  if (!canShowThankYou) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">

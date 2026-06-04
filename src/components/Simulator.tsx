@@ -170,7 +170,12 @@ const Simulator = () => {
         whatsapp: ""
       });
       setCurrentStep(0);
-      navigate("/obrigado");
+      try {
+        sessionStorage.setItem("lead_submission_success", "true");
+      } catch {
+        // Ignore storage errors; navigation still follows the successful request.
+      }
+      navigate("/obrigado", { replace: true });
     } catch (error) {
       console.error("Erro ao enviar:", error);
       setIsSubmitting(false);
@@ -256,6 +261,7 @@ const Simulator = () => {
             </Label>
             <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
               <button
+                type="button"
                 onClick={() => setFormData({ ...formData, hasDownPayment: "Sim" })}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   formData.hasDownPayment === "Sim"
@@ -266,6 +272,7 @@ const Simulator = () => {
                 <span className="text-base font-normal">Sim</span>
               </button>
               <button
+                type="button"
                 onClick={() => setFormData({ ...formData, hasDownPayment: "Não" })}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   formData.hasDownPayment === "Não"
